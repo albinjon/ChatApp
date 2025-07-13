@@ -1,0 +1,28 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String
+  password_hash String         @db.VarChar(255)
+  messages      Message[]
+  conversations Conversation[]
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  content        String
+  author         User         @relation(fields: [authorId], references: [id])
+  authorId       Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId Int
+}
+
+model Conversation {
+  id           Int       @id @default(autoincrement())
+  participants User[]
+  messages     Message[]
+}
