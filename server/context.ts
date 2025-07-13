@@ -1,5 +1,5 @@
 import * as trpcAdapter from "@trpc/server/adapters/standalone";
-import { verify, decode, JwtPayload } from "jsonwebtoken";
+import { verifyAndDecodeJWT } from "./utils/jwt";
 
 export async function createContext({
   req,
@@ -7,11 +7,7 @@ export async function createContext({
   async function getUserFromHeader() {
     const token = req.headers.authorization?.split(" ")[1];
     if (token) {
-      const isValid = verify(token, process.env.JWT_SECRET!);
-      if (isValid) {
-        const decoded = decode(token) as JwtPayload;
-        return { userId: decoded.user_id, username: decoded.username };
-      }
+      return verifyAndDecodeJWT(token);
     }
     return null;
   }

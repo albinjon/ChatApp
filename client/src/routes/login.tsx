@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { useAuth } from "../auth";
 
 export const Route = createFileRoute("/login")({
@@ -11,8 +11,14 @@ function RouteComponent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
+  const navigate = Route.useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: "/conversations" });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +27,7 @@ function RouteComponent() {
 
     try {
       await login(username, password);
-      navigate({ to: "/conversations" });
+      setIsLoading(false);
     } catch (err: any) {
       setIsLoading(false);
 

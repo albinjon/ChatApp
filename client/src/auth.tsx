@@ -22,8 +22,8 @@ const nameKey = "auth.user_name";
 const tokenKey = "auth.token";
 
 function getStoredUser(): User | null {
-  const name = localStorage.getItem(idKey);
-  const id = localStorage.getItem(nameKey);
+  const name = localStorage.getItem(nameKey);
+  const id = localStorage.getItem(idKey);
   if (!name || !id) {
     return null;
   }
@@ -73,13 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (username: string, password: string) => {
       try {
         const result = await loginMutation.mutateAsync({ username, password });
-        console.log(result);
-        const userId = result.userId;
-        if (!userId) throw new Error(`No User ID for ${username}`);
-        setStoredUser({ id: userId, name: username });
-        setStoredToken(result.token ?? null);
+        console.log(username, password);
+        const { userId, token } = result;
+        console.log(token);
+        if (!userId || !token) {
+          throw new Error(`No User ID or token for ${username}`);
+        }
         setUser({ id: userId, name: username });
-        setToken(result.token ?? null);
+        setToken(token);
+        setStoredUser({ id: userId, name: username });
+        setStoredToken(token);
       } catch (error) {
         // INFO: Re-throw to let the component handle the error
         throw error;
@@ -90,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     setUser(getStoredUser());
+    setToken(getStoredToken());
   }, []);
 
   return (
