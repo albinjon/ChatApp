@@ -1,6 +1,6 @@
 import * as React from "react";
 import { trpc } from "./utils/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 type User = {
   name: string;
@@ -9,7 +9,7 @@ type User = {
 
 export interface AuthContext {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => void;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   user: User | null;
   token: string | null;
@@ -19,6 +19,7 @@ const AuthContext = React.createContext<AuthContext | null>(null);
 
 const idKey = "auth.user_id";
 const nameKey = "auth.user_name";
+const tokenKey = "auth.token";
 
 function getStoredUser(): User | null {
   const name = localStorage.getItem(idKey);
@@ -42,25 +43,50 @@ function setStoredUser(user: User | null) {
   }
 }
 
+function getStoredToken(): string | null {
+  return localStorage.getItem(tokenKey);
+}
+
+function setStoredToken(token: string | null) {
+  if (token) {
+    localStorage.setItem(tokenKey, token);
+  } else {
+    localStorage.removeItem(tokenKey);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = React.useState<User | null>(getStoredUser());
-  const [token, setToken] = React.useState<string | null>(null);
+  const [token, setToken] = React.useState<string | null>(getStoredToken());
   const isAuthenticated = !!user;
 
   const logout = React.useCallback(async () => {
     setStoredUser(null);
+    setStoredToken(null);
     setUser(null);
+    setToken(null);
   }, []);
 
-  const login = React.useCallback((username: string, password: string) => {
-    const result = useQuery(trpc.login.queryOptions({ username, password }));
-    if (result.error) throw new Error(result.error.message);
-    const userId = result.data?.userId;
-    if (!userId) throw new Error(`No User ID for ${username}`);
-    setStoredUser({ id: userId, name: username });
-    setUser({ id: userId, name: username });
-    setToken(result.data?.token ?? null);
-  }, []);
+  const loginMutation = useMutation(trpc.login.mutationOptions());
+
+  const login = React.useCallback(
+    async (username: string, password: string) => {
+      try {
+        const result = await loginMutation.mutateAsync({ username, password });
+        console.log(result);
+        const userId = result.userId;
+        if (!userId) throw new Error(`No User ID for ${username}`);
+        setStoredUser({ id: userId, name: username });
+        setStoredToken(result.token ?? null);
+        setUser({ id: userId, name: username });
+        setToken(result.token ?? null);
+      } catch (error) {
+        // INFO: Re-throw to let the component handle the error
+        throw error;
+      }
+    },
+    [loginMutation],
+  );
 
   React.useEffect(() => {
     setUser(getStoredUser());

@@ -13,12 +13,23 @@ const client_1 = require("@prisma/client");
 const bcrypt_1 = require("bcrypt");
 const jsonwebtoken_1 = require("jsonwebtoken");
 const context_1 = require("./context");
-const procedures_1 = require("./procedures");
 exports.t = server_1.initTRPC.context().create();
 const prisma = new client_1.PrismaClient();
 const router = exports.t.router;
+const publicProcedure = exports.t.procedure;
+const protectedProcedure = exports.t.procedure.use(async function isAuthed(opts) {
+    const { ctx } = opts;
+    if (!ctx.user) {
+        throw new server_1.TRPCError({ code: "UNAUTHORIZED" });
+    }
+    return opts.next({
+        ctx: {
+            user: ctx.user,
+        },
+    });
+});
 const appRouter = router({
-    getConversations: procedures_1.protectedProcedure
+    getConversations: protectedProcedure
         .input(zod_1.z.object({ id: zod_1.z.number() }))
         .query(async ({ input }) => {
         return {
@@ -28,16 +39,16 @@ const appRouter = router({
             }),
         };
     }),
-    getUsers: procedures_1.protectedProcedure
+    getUsers: protectedProcedure
         .input(zod_1.z.object({ id: zod_1.z.number() }))
         .query(async ({ input }) => {
         return {
             users: await prisma.user.findMany({ where: { NOT: { id: input.id } } }),
         };
     }),
-    login: procedures_1.publicProcedure
+    login: exports.t.procedure
         .input(zod_1.z.object({ username: zod_1.z.string(), password: zod_1.z.string() }))
-        .query(async ({ input }) => {
+        .mutation(async ({ input }) => {
         const user = await prisma.user.findFirst({
             where: { username: input.username },
         });
@@ -45,7 +56,7 @@ const appRouter = router({
         if (!passwordHash) {
             throw new server_1.TRPCError({ code: "UNAUTHORIZED", cause: "NOT_FOUND" });
         }
-        const isValid = (0, bcrypt_1.compare)(input.password, passwordHash);
+        const isValid = await (0, bcrypt_1.compare)(input.password, passwordHash);
         if (!isValid) {
             throw new server_1.TRPCError({
                 code: "UNAUTHORIZED",

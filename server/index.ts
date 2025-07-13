@@ -7,33 +7,46 @@ import { PrismaClient } from "@prisma/client";
 import { compare } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { Context, createContext } from "./context";
-import { protectedProcedure, publicProcedure } from "./procedures";
 
 export const t = initTRPC.context<Context>().create();
 const prisma = new PrismaClient();
 const router = t.router;
 
+const publicProcedure = t.procedure;
+const protectedProcedure = t.procedure.use(async function isAuthed(opts) {
+  const { ctx } = opts;
+  if (!ctx.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return opts.next({
+    ctx: {
+      user: ctx.user,
+    },
+  });
+});
+
 const appRouter = router({
-  getConversations: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
-      return {
-        conversations: await prisma.conversation.findMany({
-          where: { participants: { some: { id: input.id } } },
-          orderBy: { updatedAt: "desc" },
-        }),
-      };
-    }),
+  getConversations: protectedProcedure.query(async ({ ctx }) => {
+    return {
+      conversations: await prisma.conversation.findMany({
+        where: { participants: { some: { id: ctx.user.userId } } },
+        include: {
+          participants: true,
+          messages: { take: 1, orderBy: { createdAt: "desc" } },
+        },
+        orderBy: { updatedAt: "desc" },
+      }),
+    };
+  }),
   getUsers: protectedProcedure
-    .input(z.object({ id: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx }) => {
       return {
-        users: await prisma.user.findMany({ where: { NOT: { id: input.id } } }),
+        users: await prisma.user.findMany({ where: { NOT: { id: ctx.user.userId } } }),
       };
     }),
   login: publicProcedure
     .input(z.object({ username: z.string(), password: z.string() }))
-    .query(async ({ input }) => {
+    .mutation(async ({ input }) => {
       const user = await prisma.user.findFirst({
         where: { username: input.username },
       });
@@ -43,7 +56,7 @@ const appRouter = router({
         throw new TRPCError({ code: "UNAUTHORIZED", cause: "NOT_FOUND" });
       }
 
-      const isValid = compare(input.password, passwordHash);
+      const isValid = await compare(input.password, passwordHash);
       if (!isValid) {
         throw new TRPCError({
           code: "UNAUTHORIZED",

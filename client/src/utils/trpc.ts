@@ -19,3 +19,22 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
   client: trpcClient,
   queryClient,
 });
+
+// Function to create an authenticated tRPC client
+export function createAuthenticatedTRPCClient(token: string) {
+  const authenticatedClient = createTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: 'http://localhost:2022',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }),
+    ],
+  });
+
+  return createTRPCOptionsProxy<AppRouter>({
+    client: authenticatedClient,
+    queryClient,
+  });
+}
