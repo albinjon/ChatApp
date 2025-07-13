@@ -7,4 +7,4 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: dev
-      POSTGRES_DB: aj_chat_app
+      POSTGRES_DB: chat_aj
