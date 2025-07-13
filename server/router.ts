@@ -82,7 +82,7 @@ export function bootstrapTRPC() {
               username: user.username,
               user_id: user.id,
               // INFO: 15 minutes of expiry.
-              exp: Math.floor(Date.now() / 1000) + 60 * 1,
+              exp: Math.floor(Date.now() / 1000) + 60 * 15,
             },
             process.env.JWT_SECRET!,
           ),
