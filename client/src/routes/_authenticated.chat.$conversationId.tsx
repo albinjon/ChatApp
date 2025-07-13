@@ -12,9 +12,11 @@ export const Route = createFileRoute("/_authenticated/chat/$conversationId")({
     if (!context.auth.token) {
       throw new Error("No authentication token available");
     }
-    const authenticatedTrpc = createAuthenticatedTRPCClient(context.auth.token);
+    const authenticatedQueryClient = createAuthenticatedTRPCClient(
+      context.auth.token,
+    );
     return queryClient.ensureQueryData(
-      authenticatedTrpc.getConversation.queryOptions({
+      authenticatedQueryClient.getConversation.queryOptions({
         conversationId: params.conversationId,
       }),
     );

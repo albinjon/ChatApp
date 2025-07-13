@@ -14,22 +14,22 @@ function ConversationsPage() {
   const [showNewConversation, setShowNewConversation] = useState(false);
   const navigate = useNavigate();
 
-  const authenticatedTrpc = useMemo(() => {
+  const authenticatedQueryClient = useMemo(() => {
     return createAuthenticatedTRPCClient(token ?? "");
   }, [token]);
 
   const { data, isLoading, error } = useQuery(
-    authenticatedTrpc?.getConversations.queryOptions(),
+    authenticatedQueryClient?.getConversations.queryOptions(),
   );
 
   const { data: usersData, isLoading: isLoadingUsers } = useQuery(
-    authenticatedTrpc?.getUsers.queryOptions(undefined, {
+    authenticatedQueryClient?.getUsers.queryOptions(undefined, {
       enabled: showNewConversation,
     }),
   );
 
   const createConversationMutation = useMutation(
-    authenticatedTrpc?.createConversation.mutationOptions(),
+    authenticatedQueryClient?.createConversation.mutationOptions(),
   );
 
   useEffect(() => {
