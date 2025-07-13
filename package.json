@@ -1,5 +1,5 @@
 {
-  "name": "examples-minimal-react",
+  "name": "chat-app",
   "private": true,
   "workspaces": [
     "client",

@@ -1,13 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "./utils/trpc";
-import { io } from "socket.io-client";
 
 export function Greeting() {
-  const greeting = useQuery(trpc.greeting.queryOptions({ name: "tRPC user" }));
-  const socket = io("http://localhost:2023");
-  socket.on("testing", () => {
-    console.log("testing");
-  });
+  const greeting = useQuery(trpc.getUsers.queryOptions({ id: 1 }));
 
-  return <div>{greeting.data?.text}</div>;
+  if (greeting.isLoading) return <div>Loading...</div>;
+  if (greeting.error) return <div>Error: {greeting.error.message}</div>;
+
+  return (
+    <ul>
+      {greeting.data?.users?.map((user) => (
+        <li key={user.id}>{user.username}</li>
+      ))}
+    </ul>
+  );
 }
