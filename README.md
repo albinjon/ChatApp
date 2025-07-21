@@ -1,6 +1,6 @@
 # Chat App By Albin
 
-This application is built from the foundation of a (https://github.com/trpc/examples-minimal-react/tree/main)[minimal react-app example], the core technologies being TRPC, socket.io, prisma and react.
+This application is built from the foundation of a [minimal TRPC example repo](https://github.com/trpc/examples-minimal-react/tree/main), the core technologies being TRPC, socket.io, prisma and react.
 
 ## Setting up
 
