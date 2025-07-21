@@ -22,7 +22,7 @@ Start the server and bring up two browser windows, logging into separate account
 
 ## Further steps
 
-One of the things I wasn't so happy with in this application is the handling of the authentication context, in relation to the queryClient. This should have been a global thing, but right now the authenticated queryClient needs to be setup in several places, but with the time given I can't improve it further. There's also a lot of things to be had in terms of error boundaries, and error handling in general, which is just not done in a very neat way right now.
+One of the things I wasn't so happy with in this application is the handling of the authentication context, in relation to the queryClient. This should have been a global thing, but right now the authenticated queryClient needs to be setup in several places, but with the time given I can't improve it further. There's also a lot of things to be wished for in terms of error boundaries, and error handling in general, which is just not done in a very neat way right now. Another thing is that the react pages could be better split up into components, which could allow for minimizing things rerendered when state changes.
 
 I would like to explore the subscriptions of TRPC further, and see how good they are. The major upside of socket.io is that it's more than just websockets, instead seing the connection as the abstract entity over WS, SSE and long-polling, and with really good reconnection.
 
